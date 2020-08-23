@@ -46,11 +46,14 @@ def parse_results(all_domains_found):
     
     for subdomain in all_domains_found:
         if any(word in subdomain for word in domain_list['domains']):
-            # removing wildcards
-            if subdomain.startswith("*"):
-                seen_domains.append(subdomain[2:])
-            else:
-                seen_domains.append(subdomain)
+            # Ensuring that we only hit the .foo.bar specified in the domain list
+            for dom in domain_list['domains']:
+                if dom in subdomain and subdomain.split('.')[-(len(dom.split('.'))-1):] == dom.split('.')[-(len(dom.split('.'))-1):]:
+                    # removing wildcards
+                    if subdomain.startswith("*"):
+                        seen_domains.append(subdomain[2:])
+                    else:
+                        seen_domains.append(subdomain)
 
     # we have a list of found domains now (which might be containing some duplicate entries)
     # Lets get rid of duplicate entries
