@@ -31,7 +31,7 @@ def slack_notifier(unique_subdomains):
     
     #print(slack_data)
     
-    response = requests.post(
+    _ = requests.post(
 	    webhook_url, data=json.dumps(slack_data),
 	    headers={'Content-Type': 'application/json'}
 	)
@@ -86,7 +86,7 @@ def parse_results(all_domains_found):
                                 writer.write('\n'.join(unique_subdomains))
                                 writer.write('\n')
 
-                except Exception as e:
+                except Exception:
                     pass    
 
     return 
