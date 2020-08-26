@@ -2,10 +2,53 @@
 
 import certstream
 import os
+import sys
 import yaml
 import time
 import requests
 import json
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+DOMAIN_LIST = {}
+
+
+class Watcher:
+    DIR = "."
+
+    def __init__(self):
+        self.observer = Observer()
+
+    def run(self):
+        event_handler = Handler()
+        self.observer.schedule(event_handler, self.DIR, recursive=False)
+        
+        self.observer.start()
+
+        try:
+            certstream.listen_for_events(print_callback, url=url)
+            while True:          
+                time.sleep(2)
+        except:
+            self.observer.stop()
+
+        self.observer.join()
+
+
+class Handler(FileSystemEventHandler):
+
+    @staticmethod
+    def on_any_event(event):
+        global DOMAIN_LIST
+        if event.is_directory:
+            return None
+
+        elif event.event_type == 'created':
+            # We don't care
+            pass
+
+        elif event.event_type == 'modified' and 'domains.yaml' in event.src_path:
+            load_domains()
 
 
 # certstream websocket URL 
@@ -42,12 +85,13 @@ def slack_notifier(unique_subdomains):
 
 # function to extract and parse subdomains/domains related to our specified domains
 def parse_results(all_domains_found):
+    global DOMAIN_LIST
     seen_domains = []
     
     for subdomain in all_domains_found:
-        if any(word in subdomain for word in domain_list['domains']):
+        if any(word in subdomain for word in DOMAIN_LIST['domains']):
             # Ensuring that we only hit the .foo.bar specified in the domain list
-            for dom in domain_list['domains']:
+            for dom in DOMAIN_LIST['domains']:
                 if dom in subdomain and subdomain.split('.')[-(len(dom.split('.'))-1):] == dom.split('.')[-(len(dom.split('.'))-1):]:
                     # removing wildcards
                     if subdomain.startswith("*"):
@@ -106,17 +150,20 @@ def print_callback(message, context):
             pass
         else:
            parse_results(all_domains)
- 
 
-if __name__ == "__main__":
-
+def load_domains():
+    global DOMAIN_LIST
     # reading the domains file
     with open(domains_yaml, 'r') as f:
         try:
-            domain_list  = yaml.safe_load(f)
+            DOMAIN_LIST = yaml.safe_load(f)
+            print("\u001b[32m[INFO]\u001b[0m No of domains/Keywords to monitor  " + str(len(DOMAIN_LIST['domains'])))
         except yaml.YAMLError as err:
             print(err)
-    
+ 
+
+if __name__ == "__main__":
+        
     # reading the config file
     with open('config.yaml', 'r') as f:
         try:
@@ -136,14 +183,15 @@ if __name__ == "__main__":
     if os.name == 'nt':
         os.system('cls')
     print(banner)
+    load_domains()
 
     # displaying basic information
-    print("\u001b[32m[INFO]\u001b[0m No of domains/Keywords to monitor  " + str(len(domain_list['domains'])))
+    #print("\u001b[32m[INFO]\u001b[0m No of domains/Keywords to monitor  " + str(len(DOMAIN_LIST['domains'])))
     if webhook['SLACK_WEBHOOK'].startswith("https://"):
         print("\u001b[32m[INFO]\u001b[0m Slack Notifications Status - \u001b[32;1mON\u001b[0m")
     else:
         print("\u001b[32m[INFO]\u001b[0m Slack Notifications Status - \u001b[31;1mOFF\u001b[0m")
 
 
-
-    certstream.listen_for_events(print_callback, url=url)
+    watch = Watcher()
+    watch.run()
