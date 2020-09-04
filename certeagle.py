@@ -7,8 +7,16 @@ import yaml
 import time
 import requests
 import json
+import contextlib
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+# Requires further testing
+'''@contextlib.contextmanager
+def suppressOutput():
+    with open(os.devnull, 'w') as devnull:
+        with contextlib.redirect_stderr(devnull) as err, contextlib.redirect_stdout(devnull) as out:
+            yield (err, out)'''
 
 DOMAIN_LIST = {}
 
@@ -26,6 +34,7 @@ class Watcher:
         self.observer.start()
 
         try:
+            #with suppressOutput():
             certstream.listen_for_events(print_callback, url=url)
             while True:          
                 time.sleep(2)
@@ -71,17 +80,13 @@ def slack_notifier(unique_subdomains):
         'text': 
             "🔴 CertEagle Alert : \n\n" + "✔️ Domain matched : " + str(len(unique_subdomains)) + "\n\n" +'\n'.join(unique_subdomains) 
         }
-    
-    #print(slack_data)
-    
+        
     _ = requests.post(
 	    webhook_url, data=json.dumps(slack_data),
 	    headers={'Content-Type': 'application/json'}
 	)
 
     return 
-
-
 
 # function to extract and parse subdomains/domains related to our specified domains
 def parse_results(all_domains_found):
@@ -99,43 +104,37 @@ def parse_results(all_domains_found):
                     else:
                         seen_domains.append(subdomain)
 
-    # we have a list of found domains now (which might be containing some duplicate entries)
-    # Lets get rid of duplicate entries
-
     if len(seen_domains) > 1:
         unique_subdomains = list(set(seen_domains))
 
-         # checking if domain already exists in already seen file
-        
-       
+        # checking if domain already exists in already seen file
         for t in unique_subdomains:
+            try:
+                #open and match 
+                with open('already-seen.log' , 'r') as f:
+                    already_seen = f.read().splitlines()
+                    if any(url == t for url in already_seen):
+                        unique_subdomains.remove(t)
+                        continue
+                    else:
+                        with open('already-seen.log' , 'a') as writer:
+                            writer.write(''.join(t))
+                            writer.write('\n')
+                        if webhook['SLACK_WEBHOOK'].startswith("https://hooks.slack.com/"):
+                            slack_notifier(unique_subdomains)
+                        if webhook['WEBHOOK_URL'] != 'default' and webhook['WEBHOOK_TOKEN'] != 'default':
+                            try:
+                                req = requests.post(webhook['WEBHOOK_URL'], data={'new_domain': t}, headers={'req_token': webhook['WEBHOOK_TOKEN']})
+                                pass
+                            except Exception:
+                                pass
+            except Exception:
+                continue    
             print("\u001b[32m[MATCH]\u001b[0m : " + t )
             with open(found_domains_path, 'a') as f:
                     f.write(time.strftime("%Y-%m-%d") + " {}\n".format(t))
-
-
-        # checking if a hook url is supplied , if yes then sending notifications
-        if webhook['SLACK_WEBHOOK'].startswith("https://hooks.slack.com/"):
-            for t in unique_subdomains:
-                try:
-                    #open and match 
-                    with open('already-seen.log' , 'r') as f:
-                        already_seen = f.read().splitlines()
-                        if any(word in t for word in already_seen):
-                            pass
-                        else:
-                            #send notifications
-                            slack_notifier(unique_subdomains)
-                            with open('already-seen.log' , 'a') as writer:
-                                writer.write('\n'.join(unique_subdomains))
-                                writer.write('\n')
-
-                except Exception:
-                    pass    
-
     return 
-
-    
+  
 # callback function
 def print_callback(message, context):
 
@@ -150,6 +149,8 @@ def print_callback(message, context):
             pass
         else:
            parse_results(all_domains)
+    else:
+        print(message)
 
 def load_domains():
     global DOMAIN_LIST
@@ -191,7 +192,10 @@ if __name__ == "__main__":
         print("\u001b[32m[INFO]\u001b[0m Slack Notifications Status - \u001b[32;1mON\u001b[0m")
     else:
         print("\u001b[32m[INFO]\u001b[0m Slack Notifications Status - \u001b[31;1mOFF\u001b[0m")
-
+    if webhook['WEBHOOK_URL'] != 'default' and webhook['WEBHOOK_TOKEN'] != 'default':
+        print("\u001b[32m[INFO]\u001b[0m ReconEngine Notifications Status - \u001b[32;1mON\u001b[0m")
+    else:
+        print("\u001b[32m[INFO]\u001b[0m ReconEngine Notifications Status - \u001b[31;1mOFF\u001b[0m")
 
     watch = Watcher()
     watch.run()
