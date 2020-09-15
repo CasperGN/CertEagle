@@ -1,5 +1,6 @@
 ## CertEagle - Asset monitoring utility using real time CT log feeds
 ![certeagle](https://raw.githubusercontent.com/devanshbatham/CertEagle/master/static/logo.PNG)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FCasperGN%2FCertEagle.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FCasperGN%2FCertEagle?ref=badge_shield)
 
 ### Detailed Description about this can be found here :
 Read Blog here : https://medium.com/@Asm0d3us/weaponizing-live-ct-logs-for-automated-monitoring-of-assets-39c6973177c7
@@ -85,3 +86,7 @@ Shoot my DM : [@0xAsm0d3us](https://twitter.com/0xAsm0d3us)
 ### #Offtopic but Important
 
 This COVID pandemic affected animals too (in an indirect way) . I will be more than happy if you will show some love for Animals by donating to [Animal Aid Unlimited](https://animalaidunlimited.org/) ,[Animal Aid Unlimited](https://animalaidunlimited.org/) saves animals through street animal rescue, spay/neuter and education. Their mission is dedicated to the day when all living beings are treated with compassion and love. ✨
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FCasperGN%2FCertEagle.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FCasperGN%2FCertEagle?ref=badge_large)
