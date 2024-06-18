@@ -7,6 +7,6 @@ requests==2.24.0
 six==1.15.0
 termcolor==1.1.0
 testresources==2.0.1
-urllib3==1.26.17
+urllib3==1.26.19
 websocket-client==0.48.0
 watchdog==0.10.3
