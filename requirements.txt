@@ -10,3 +10,4 @@ testresources==2.0.1
 urllib3==1.26.17
 websocket-client==0.48.0
 watchdog==0.10.3
+setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
