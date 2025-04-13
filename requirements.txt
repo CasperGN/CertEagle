@@ -1,12 +1,13 @@
-certifi==2020.6.20
+certifi==2024.7.4
 certstream==1.10
 chardet==3.0.4
-idna==2.10
+idna==3.7
 PyYAML==5.4
 requests==2.32.0
 six==1.15.0
 termcolor==1.1.0
 testresources==2.0.1
-urllib3==1.26.17
+urllib3==1.26.18
 websocket-client==0.48.0
 watchdog==0.10.3
+setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
